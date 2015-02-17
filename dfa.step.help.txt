@@ -1,0 +1,97 @@
+#########    DOCUMENTATION FOR DFA.STEP.R    ###########
+
+R function for Stepwise Linear Discriminant Analysis
+
+  John Van Sickle, USEPA/NHEERL/WED, Corvallis OR. 
+
+  Version 1.0 (August 5, 2004)
+
+######################################################;
+
+  To use the functions in an R session:
+
+1) EITHER copy and paste the entire contents of DFA.STEP.R into the command window, 
+      OR do: source(”mypath/DFA.STEP.R”)
+  
+  2) Load the MASS package.
+
+   Then execute as shown below.
+
+######################################################;
+
+  DESCRIPTION:
+  Performs stepwise forward or backward linear discriminant function analysis (DFA).
+
+  USAGE:
+  
+  final.model<- 
+  dfa.step(predcal,candvar,grps,method='forward',P.enter.lim=0.15,P.stay.lim=0.20));
+ 
+  NOTE — The MASS package must be loaded prior to execution;
+
+  ARGUMENTS:
+
+   predcal: Data frame containing data for all candidate predictor variables (columns)
+             for a set of observations (rows). No missing values allowed.
+
+   candvar: Vector of names of candidate predictor variables. Names must be a subset of
+             column names in predcal.
+
+   grps: Vector of group assignments for observations (rows) of predcal.  
+          Length(grps) must be same as number of rows in predcal. Grps must be 
+          a factor object.
+
+   method:‘”forward”’ (default), or ‘”backward”’. 
+
+   P.enter.lim: A variable not in the model must have P-value for entry that is less
+               than P.enter.lim, if it is to be entered. Default = 0.15.
+
+   P.stay.lim: A variable in the model must have P-value for inclusion that is less
+               than P.stay.lim, if it is to remain in the model. Default = 0.20.
+
+
+DETAILS: 
+ 
+	Forward stepwise selection begins with a null DFA model and adds
+one variable at a time, until no new variables are ‘significant’. 
+After each addition, all variables in the new model are checked 
+for significance and a nonsignificant variable will be removed. 
+  Backward stepwise selection begins with all candidates in model and removes one 
+variable at a time, until all remaining variables are ‘significant’. After each 
+removal, all variables not in the new model are checked, and a significant 
+variable will be entered.
+  Partial F-statistics (F-to-stay and F-to-enter) are based on Wilks’ lambda 
+derived from 1-way ANOVA for univariate models and 1-way MANOVA for 
+multivariate models.  Values of P-to-enter and P-to-stay cannot be 
+interpreted as representing the true ‘significance’ of candidate 
+variables because of the multiple testing involved in stepwise selection.  
+  After selecting the final model, dfa.step() refits the model using the 
+lda() function of the MASS package. Classification accuracies and confusion 
+matrices are printed for both resubstitution and leave-one-out crossvalidation 
+predictions of group membership. Classification assumes proportional priors.
+
+VALUE: The lda()object of the final model. 
+  See the help files for “lda” and “predict.lda”. For example, 
+predict(final.model)$posterior is the matrix of group membership 
+probabilities predicted by the final model for all observations 
+in the calibration data set.
+
+KNOWN BUGS: If an exact linear dependence exists among the variables 
+in a candidate model, then the covariance matrix is singular. 
+An error message about the residuals is produced by manova(), 
+and the program stops. Future versions should compute and 
+report the tolerance for each candidate variable relative 
+to the variables in the model. 
+
+REFERENCES:
+
+Documentation for SAS PROC STEPDISC and PROC DISCRIM
+
+Rencher, A.C. 2002. Methods of multivariate analysis (2nd ed.). 
+  John Wiley & Sons, New York. 
+
+Venables, W.N. and B.D. Ripley. 1997. Modern applied 
+  statistics with S-Plus (2nd ed.). Springer, New York.
+  
+       
+

@@ -1,0 +1,72 @@
+#########    Documentation for  RARIFY.R    ###########
+
+R function for rarefaction (i.e., subsampling), of a 
+benthic count data set, to produce subsamples with a 
+user-specified fixed total count.
+
+  John Van Sickle, USEPA/NHEERL/WED, Corvallis OR. 
+
+  Version 1.0 (June 10, 2005)
+######################################################;
+
+  To use the function in an R session:
+
+Either copy and paste the entire contents of RARIFY.R 
+into the command window, or else do: source(”mypath/RARIFY.R”)
+  
+   Then execute as shown below.
+
+######################################################;
+
+DESCRIPTION:
+Accepts an input data frame containing raw abundance counts of 
+individual taxa. Each row of the input data is assumed to 
+give the abundance (count) of a single taxon in a single 
+sample. Produces an output data frame identical to the input data, 
+except that the taxon abundances are those of a fixed-count 
+subsample of the input data.
+
+USAGE:
+outbug <- rarify(inbug, sample.ID, abund, subsiz)
+
+
+ARGUMENTS:  
+
+inbug:  Input data frame with each row containing the 
+        count of a taxon in a single sample. 
+
+sample.ID: The column (variable) name, in quotes, of 
+           inbug that contains a unique ID for each sample.
+
+abund:  The column (variable) name, in quotes, of inbug 
+        that contains the nonzero abundances (counts) of taxa.  
+
+subsiz: Positive integer specifying the desired fixed 
+        count size for each rarified sample.
+
+
+
+DETAILS:  The function loops through all samples, 
+          randomly selecting (without replacement) a total 
+          of subsiz individuals from each. If an input sample 
+          has total count less than or equal to subsiz, 
+          then it is returned unaltered in the output data set.
+
+
+VALUE:  A data frame (outbug) that is identical to the 
+        input set, except that abundances are replaced by 
+        the subsampled abundances for each taxon. During 
+        execution, the function prints sample ID's to the 
+        screen as each sample is processed.
+
+
+WARNINGS: Prior to using RARIFY.R, any rows with missing 
+          values for either the sample.ID or the abund 
+          columns should be removed from the input data set.
+
+REFERENCES:  See RARIFY.EXAMPLES.R.TXT for examples of usage.
+
+  
+
+
+

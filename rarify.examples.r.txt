@@ -1,0 +1,48 @@
+# R examples of rarifying (subsampling) raw bug count samples;
+# Function assumes that input data has EMAP BENTCNT format;
+# That is, one line of the input file contains total abundance(count) of one taxon from one sample;
+
+# SEE RARIFY.HELP.TXT FOR DOCUMENTATION;
+
+############### EXAMPLE 1;
+# Subsample the DEQ bug data set of July 04. This set was already subsampled to 300 fixed count;
+# This example subsamples the 300-count file down to 200 count;
+
+#read input data set;
+DEQ.bug<-read.table("c:/mypath/bug data_12Jul04.csv",header=T,sep=",");
+
+#source the rarify.r function;
+source("c:/mypath/rarify.r");
+
+#execute rarify code;
+DEQ.subsample<-rarify(inbug=DEQ.bug, sample.ID="Sample", abund="Count", subsiz=200);
+
+# Rarefaction complete. 765 samples required 40 sec. execution time;
+# Output data set is "DEQ.subsample". Has exact same structure as input data set;
+# Taxa that were 'sampled out' during rarefaction have zero counts in output data set;
+# To retain only those taxa in the output data set having nonzero abundance, do the following: ;
+
+DEQ.subsample.2<-DEQ.subsample[DEQ.subsample$Count>0,];
+
+#from, here can proceed to matrifying of DEQ.subsample.2;
+#Also, can store it in R workspace, or write to text file;
+
+#################################################;
+#######  EXAMPLE 2;
+# EMAP-W BENTCNT7 file, all samples. Kinda big - 45700 rows by 16 columns;
+
+#read bentcnt7 file which has 16 variables defining each site and taxon;
+bentcnt7<-read.table("c:/mypath/bentcnt7.subvar.csv",sep=",",header=T,na.strings=".");
+
+# keep only the observations with nonnegative, nonmissing values for abundance;
+bentcnt7<-bentcnt7[bentcnt7$ABUND>=0,];
+
+#create a unique sample ID variable, and add it to the data frame;
+SAMPID=interaction(bentcnt7$SITE_ID,bentcnt7$YEAR,bentcnt7$VISIT_NO,bentcnt7$SAMPTYPE,drop=T);
+bentcnt7<-data.frame(bentcnt7,SAMPID=SAMPID); rm(SAMPID);
+
+
+#Execute rarefaction. Subsample to 300 count;
+WEMAP.subsample<-rarify(inbug=bentcnt7, sample.ID="SAMPID", abund="ABUND", subsiz=300);
+
+# Rarefaction complete. 974 samples required 4 minutes execution time;

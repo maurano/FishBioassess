@@ -1,0 +1,174 @@
+#########    Documentation for DFA.ALLSUB.v4.R    ###########
+
+R function for all-subsets Linear Discriminant Analysis, with an application to predictive modeling (RIVPACS-type modeling).
+
+  John Van Sickle, USEPA/NHEERL/WED, Corvallis OR. 
+
+  Version 4.0 (Feb. 25, 2010)
+  
+
+######################################################;
+
+  To use the function in an R session:
+
+1) EITHER copy and paste the entire contents of DFA.ALLSUB.v4.R into the command window, 
+   or else do: source(”mypath/DFA.ALLSUB.v4.R”)
+  
+2) Load the MASS package, and also the GTOOLS (or GREGMISC) package.
+
+   Then execute as shown below.
+
+######################################################;
+
+DESCRIPTION:
+Performs all-subsets linear discriminant function (DF) analysis, for purposes of exploring candidate predictive models.
+
+USAGE:
+  
+dfm.best<-dfa.allsub.v4(bugcal, bugvld, predcal, predvld, grps, candvar, numkeep, Pc);
+
+
+ARGUMENTS:
+    
+ bugcal:  Site (rows) by species (columns) matrix containing 0's or 1's, denoting the
+              absence or presence, respectively, of species at reference calibration sites. 
+              Column names should contain species names or other identifying codes. Row
+              names should contain site identifiers. Missing values not allowed.
+
+ bugvld:  Site by species matrix of same type as bugcal, but containing species 
+                presence/absence data for a different set of sites. Typically, these are data from
+                reference sites used for model validation. Column names and column order 
+                should match exactly with those of bugcal. Row names contain site or sample 
+                ID's. Missing values not allowed.
+
+predcal:   Matrix or data frame of candidate DF predictor variables (columns) for 
+                reference calibration sites (rows). Row names (sites) must match those of 
+                bugcal and have same order. Column names are variable names. Missing values
+                not allowed.
+
+predvld:  Matrix or data frame of candidate DF predictor variables (columns) for 
+                the sites (rows) corresponding to bugvld. Row names (sites) must match those
+                of bugvld and have same order. Column names must match those of predcal
+                and have the same order.
+
+grps:       Vector identifying the group membership of each calibration site. Must have
+                length equal to the row dimension of bugcal. Typically the output of a pruned
+               dendrogram from a cluster analysis of calibration sites.
+
+candvar:   Vector of names of desired candidate DF predictor variables. Must be a subset
+                 of the column names of predcal and predvld. 
+
+numkeep: Vector of same length as candvar specifying how many 'best' DF models to
+                  retain and further analyze. The kth element of numkeep specifies the number
+                  of models to retain that contain k predictors.
+
+Pc:          Occurrence probability cutoff. All species at a site with model-predicted 
+               occurrence probabilities >= Pc will be included in the O/E calculation for that 
+               site. Typically, this is a very small positive number, such as 0.0000001, to
+        		   specify inclusion of all species, or else it is 0.5, to specify inclusion of only 
+         		   common species.
+
+
+
+DETAILS: 
+
+	The function first uses 1-way ANOVA or MANOVA on the calibration data to compute the Wilks lambda
+  measure of group separation, for all possible combinations of candidate predictors. For each model 
+  order (number of predictors in the model), a small set of 'best' models is retained, as specified 
+  by numkeep. The best models of any order are those with the smallest Wilks lambda (maximal 
+  group separation), among all possible models of that order. 
+	Then, each of the 'best' models is refitted to the calibration data as 
+  a linear DF model, using lda() of the MASS package. Resubstitution and 
+  leave-one-out crossvalidation classification accuracies are reported for 
+  the calibration data. Each 'best' model is also used to predict expected 
+  richness (E) for the calibration and 'validation' data sets, and the 
+  resulting statistics of O/E and BC are reported. The Pc cutoff specifies the 
+  commonness level of taxa to be included in calculations of O/E and BC.
+
+VALUE:
+	During function execution, statistics of O/E and BC are printed for the null model 
+  (Van Sickle et al., 2005). Upon completion, the function value (dfm.best) is 
+  a list containing 3 components: 
+        
+	The first component (subset.stats) is a data frame with each 
+   row reporting one "best" model, using the following columns:
+
+order – Model order.
+
+F.stat, Wilks – Wilks lambda and its approximate F-statistic for the overall model.
+
+cls.crct.resub, cls.crct.cv – Resubstitution and leave-one-out crossvalidation classification
+                              accuracies for calibration sites. Classifications employ group
+                              priors proportional to group occurrence frequency in the
+                              calibration data (Clarke et al. 1996)
+
+MNOE.cal, SDOE.cal, RMSE.cal – Mean, standard deviation and root-mean-squared
+                                  error for O/E at calibration sites.
+
+SDRS.cal – Replicate-sampling standard deviation of O/E at calibration sites.
+
+MNOE.vld, SDOE.vld, RMSE.vld – Mean, standard deviation and root-mean-squared
+                                  error for O/E at validation sites.
+
+BCMD.cal, BC90.cal, BCMD.vld, BC90.vld  - Statistics of the BC measure for calibration(.cal)
+                                         and validation (.vld) sites. "MD" denotes the median
+                                         and "90" the 90th percentile. BC measures the Bray-Curtis
+                                         dissimilarity between observed and expected assemblages.
+
+model – Predictors in the model.
+
+        The second component (null.stats) is a vector of named statistics for null model O/E and BC.
+        The third component (CV.error.matrices) is a list containing the CV confusion (error) matrix 
+     for each of the "best" models.  
+
+
+USAGE NOTES AND WARNINGS: 
+
+1) If validation data is not available, then you can re-use the calibration
+   data (species and predictor data) as placeholders for bugvld and predvld.
+
+2) During predictions of expected richness, sites are not tested for 
+  whether they may be outliers in predictor space, relative to the 
+  groups of calibration sites (Clarke et al. 1996). 
+
+3) BEWARE of large models!  Dfa.allsub.v4 screens all of the (2^p-1) models 
+  that can be formed from p candidate predictors. For p = 14, execution 
+  requires about 5 minutes on a 2.8 Ghz machine under Windows XP. 
+  Each additional candidate predictor will approximately double the execution time.
+
+4) This version of dfa.allsub does not check whether the 
+  design matrix of predictors is well-conditioned. In the 
+  special case of an exact linear dependence among predictors, 
+  an error message concerning model residuals is produced by manova(), 
+  and dfa.allsub terminates. Exact linear dependence commonly happens 
+  when too many dummy (0,1) variables are used as candidates, to represent, 
+  e.g., regions or geologic types. A similar error occurs if all values of 
+  a candidate predictor variable are identical (e.g., = 0) at 
+  the calibration sites.
+
+
+REFERENCES:
+
+Clarke, R. T., J. F. Wright and M. T. Furse. 2003. RIVPACS models for predicting 
+   the expected macroinvertebrate fauna and assessing the ecological quality 
+   of rivers. Ecological Modelling 160:219-233.
+
+Rencher, A.C. 2002. Methods of multivariate analysis (2nd ed.). John Wiley & Sons, New York. 
+
+Van Sickle, J., C.P. Hawkins, D.P. Larsen and A.T. Herlihy (2005) A null model for 
+   the expected macroinvertebrate assemblage in streams.  
+   Journal of the North American Benthological Society 24, 178-191.
+
+Van Sickle, J., David D. Huff, and C.P. Hawkins (2006). Selecting discriminant 
+   function models for predicting the expected richness of aquatic 
+   macroinvertebrates. Freshwater Biology 51, 359-372.
+
+Van Sickle, J. (2008) An index of compositional dissimilarity between 
+   observed and expected assemblages. Journal of the North American 
+   Benthological Society 27, 227-235. 
+
+Venables, W.N. and B.D. Ripley. 1997. Modern applied statistics with S-Plus (2nd ed.). 
+   Springer, New York.
+
+
+
