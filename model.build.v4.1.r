@@ -1,22 +1,23 @@
-# R code to build a RIVPACS-type model. ;
+# R code to build a RIVPACS-type model
+
 # Includes computing dissimilarity matrix, clustering, cluster pruning, and discriminant function analysis (DFA) ;
 # options are available for stepwise and all subsets DFA;
 
-#Version 3 , 6/25/07 -- Adds BC index as alternative for model evaluation;
-
-#Version 4, 02/35/10 -- Reorganized, along with model.predict.r, to produce a final model that is more portable;
-     #Also includes a function to compare observed versus predicted for all taxa at a single site;
-
-#Version 4.1, )7/15/10 -- More flexible input andd more info in  output for model predictions.
-#                       -- Also, option to remove rare taxa before clustering;
+#Version 3,   06/25/07   -- Adds BC index as alternative for model evaluation;
+#Version 4,   02/35/10   -- Reorganized, along with model.predict.r, to produce a final model that is more portable;
+#                        -- Also includes a function to compare observed versus predicted for all taxa at a single site;
+#Version 4.1, 07/15/10   -- More flexible input andd more info in  output for model predictions.
+#                        -- Also, option to remove rare taxa before clustering;
 
 # John Van Sickle, US Environmental Protection Agency;
+# Edited: Maurano 02/XX/15
 
 ##################################################;
-
-#load required packages;
-library(gtools); library(MASS);
-library(cluster); library(Hmisc);
+# STEP 0 -- SET UP WORKSPACE --
+packages <- c("gtools","MASS","cluster","Hmisc")
+install.packages(packages) #install required packages
+library(packages) #load required packages;
+rm(packages) #clean up from workplace set up
 
 ############;
 # STEP 1 -- INITIAL SETUP -- Input and organize the bug and predictor data;
